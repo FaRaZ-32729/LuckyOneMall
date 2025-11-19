@@ -4,7 +4,7 @@ const adminOnly = require("../middlewere/adminOnly");
 
 const router = express.Router();
 
-router.post("/add", adminOnly, createVenue);
+router.post("/add",  createVenue);
 router.get("/all", adminOnly, getVenues);
 router.get("/single-venue/:id", getSingleVenue);
 router.get("/venue-by-org/:organizationId", getVenuesByOrganization);

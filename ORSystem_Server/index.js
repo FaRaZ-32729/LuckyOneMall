@@ -41,8 +41,8 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/users", userRouter);
 app.use("/auth", authRouter);
 app.use("/organization", authenticate, orgRouter);
-app.use("/venue", authenticate, venueRouter);
-app.use("/device", authenticate, deviceRouter);
+app.use("/venue",  venueRouter);
+app.use("/device",   deviceRouter);
 app.use("/alert", alertsRouter);
 
 

@@ -4,7 +4,7 @@ const adminOnly = require("../middlewere/adminOnly");
 const router = express.Router();
 
 
-router.post("/add", adminOnly, createDevice);
+router.post("/add",  createDevice);
 router.put("/update/:id", adminOnly, updateDevice)
 router.get("/all-devices", getAllDevices);
 router.get("/single-device/:id", getSingleDevice);
