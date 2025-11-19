@@ -1,4 +1,5 @@
 const orgModel = require("../models/organizationModel");
+const userModel = require("../models/userModel");
 
 // CREATE
 const createOrganization = async (req, res) => {
@@ -40,6 +41,70 @@ const getOrganizations = async (req, res) => {
         return res.status(500).json({ message: "Server Error" });
     }
 };
+
+// get single organization  
+const getOrganizationById = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!id) {
+            return res.status(400).json({ message: "Organization ID is required" });
+        }
+
+        const org = await orgModel.findById(id);
+
+        if (!org) {
+            return res.status(404).json({ message: "Organization not found" });
+        }
+
+        res.status(200).json({
+            message: "Organization fetched successfully",
+            organization: org,
+        });
+
+    } catch (err) {
+        console.error("Error fetching organization by ID:", err);
+        res.status(500).json({
+            message: "Internal Server Error while fetching organization",
+        });
+    }
+};
+
+// GET ORGANIZATION BY USER ID
+const getOrganizationByUserId = async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        if (!userId) {
+            return res.status(400).json({ message: "User ID is required" });
+        }
+
+        // Check if user exists
+        const user = await userModel.findById(userId).populate("organization");
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Check if user has an organization
+        if (!user.organization) {
+            return res.status(404).json({ message: "This user does not belong to any organization" });
+        }
+
+        // Return populated organization
+        res.status(200).json({
+            message: "Organization fetched successfully",
+            organization: user.organization,
+        });
+
+    } catch (err) {
+        console.error("Error fetching organization by user ID:", err);
+        res.status(500).json({
+            message: "Internal Server Error while fetching organization by user ID",
+        });
+    }
+};
+
 
 // UPDATE
 const updateOrganization = async (req, res) => {
@@ -109,4 +174,4 @@ const deleteOrganization = async (req, res) => {
     }
 };
 
-module.exports = { createOrganization, getOrganizations, updateOrganization, deleteOrganization }
+module.exports = { createOrganization, getOrganizations, updateOrganization, deleteOrganization, getOrganizationById, getOrganizationByUserId }
