@@ -5,7 +5,7 @@ const router = express.Router();
 
 
 router.post("/add",  createDevice);
-router.put("/update/:id", adminOnly, updateDevice)
+router.put("/update/:id",  updateDevice)
 router.get("/all-devices", getAllDevices);
 router.get("/single-device/:id", getSingleDevice);
 router.get("/device-by-venue/:venueId", getDevicesByVenue);
