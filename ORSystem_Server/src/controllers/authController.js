@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const sendEmail = require("../utils/sendEmail");
 const organizationModel = require("../models/organizationModel");
 
-
+// api for registering admin
 const registerAdmin = async (req, res) => {
     try {
         const { name, email, password } = req.body;
@@ -44,6 +44,7 @@ const registerAdmin = async (req, res) => {
 
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 
+// api for creating user 
 const createUser = async (req, res) => {
     try {
         const { name, email, role, organizationId } = req.body;
@@ -155,7 +156,7 @@ const createUser = async (req, res) => {
     }
 };
 
-
+// set password
 const setPassword = async (req, res) => {
     try {
         const { token } = req.params;
@@ -235,7 +236,7 @@ const setPassword = async (req, res) => {
     }
 };
 
-
+// verify otp
 const verifyOTP = async (req, res) => {
     try {
         const { otp } = req.body;
@@ -244,20 +245,20 @@ const verifyOTP = async (req, res) => {
         if (!otp || !token)
             return res.status(400).json({ message: "OTP and token are required" });
 
-        // 🔹 Decode token to get email
+        // Decode token to get email
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const user = await userModel.findOne({ email: decoded.email });
 
         if (!user) return res.status(404).json({ message: "User not found" });
 
-        // 🔹 Validate OTP
+        // Validate OTP
         if (user.otp !== otp)
             return res.status(400).json({ message: "Invalid OTP" });
 
         if (Date.now() > user.otpExpiry)
             return res.status(400).json({ message: "OTP expired" });
 
-        // 🔹 Update user status
+        // Update user status
         user.isVerified = true;
         user.isActive = true;
         user.otp = null;
@@ -278,7 +279,7 @@ const verifyOTP = async (req, res) => {
     }
 };
 
-
+// login user
 const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -321,7 +322,7 @@ const loginUser = async (req, res) => {
     }
 };
 
-
+//forget password
 const forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
@@ -382,7 +383,7 @@ const forgotPassword = async (req, res) => {
     }
 };
 
-
+// reset password
 const resetPassword = async (req, res) => {
     try {
         const { token } = req.params;
@@ -433,7 +434,7 @@ const resetPassword = async (req, res) => {
     }
 };
 
-
+// logout user 
 const logoutUser = async (req, res) => {
     try {
         res.clearCookie("token", { httpOnly: true, sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax", secure: false });
@@ -444,6 +445,7 @@ const logoutUser = async (req, res) => {
     }
 };
 
+// verified user after login
 const verifyMe = async (req, res) => {
     console.log("verify");
     try {

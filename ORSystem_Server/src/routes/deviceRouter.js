@@ -9,7 +9,7 @@ router.put("/update/:id",  updateDevice)
 router.get("/all-devices", getAllDevices);
 router.get("/single-device/:id", getSingleDevice);
 router.get("/device-by-venue/:venueId", getDevicesByVenue);
-router.delete("/delete/:id", adminOnly, deleteDevice);
+router.delete("/delete/:id",  deleteDevice);
 
 
 module.exports = router;

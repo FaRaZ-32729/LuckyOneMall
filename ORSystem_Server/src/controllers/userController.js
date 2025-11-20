@@ -2,12 +2,19 @@ const userModel = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const sendEmail = require("../utils/sendEmail");
 
-// only admin
+//get all users for admin
 const getAllUsers = async (req, res) => {
-    const users = await userModel.find();
-    res.json(users);
+    try {
+        const users = await userModel.find();
+        if (!users) return res.status(404).json({ message: "No Users Found" });
+        return res.status(200).json(users);
+    } catch (error) {
+        console.log("error while getting all users");
+        return res.status(500).json({ message: "Server Error" })
+    }
 };
 
+// update user status for admin only
 const updateUserStatus = async (req, res) => {
     try {
         const { id } = req.params;
@@ -27,21 +34,6 @@ const updateUserStatus = async (req, res) => {
         user.isActive = isActive;
         user.suspensionReason = isActive ? "" : suspensionReason;
         await user.save();
-
-        // if (isActive === false) {
-        //     try {
-        //         await sendEmail(
-        //             user.email,
-        //             "Account Deactivated - ForstKontroll",
-        //             `Dear ${user.email},\n\nYour account has been deactivated by the admin.\nReason: ${suspensionReason}\n\nIf you believe this was a mistake, please contact support.\n\n— ForstKontroll Team`
-        //         );
-        //         console.log(`Suspension email sent to ${user.email}`);
-        //     } catch (emailError) {
-        //         console.error("Error sending suspension email:", emailError);
-        //     }
-        // }
-
-        // ✅ Send response
 
         try {
             const statusText = isActive ? "Activated" : "Deactivated";
@@ -80,17 +72,19 @@ const updateUserStatus = async (req, res) => {
         } catch (emailError) {
             console.error("Error sending email:", emailError);
         }
-        
+
         res.status(200).json({
             message: `User has been ${isActive ? "activated" : "deactivated"}`,
             user,
         });
+
     } catch (err) {
         console.error("Error updating user status:", err);
         res.status(500).json({ message: "Error updating user status" });
     }
 };
 
+// update user profile
 const updateUserProfile = async (req, res) => {
     try {
         const { id } = req.params;
@@ -101,10 +95,10 @@ const updateUserProfile = async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
 
-        // ✅ Update name if provided
+        // Update name if provided
         if (name) user.name = name;
 
-        // ✅ Update email if provided and not already in use
+        // Update email if provided and not already in use
         if (email && email !== user.email) {
             const emailExists = await userModel.findOne({ email });
             if (emailExists) {
@@ -113,18 +107,18 @@ const updateUserProfile = async (req, res) => {
             user.email = email;
         }
 
-        // ✅ Update organization if provided
+        // Update organization if provided
         if (organization) {
             user.organization = organization;
         }
 
-        // ✅ Update password if provided
+        // Update password if provided
         if (password) {
             // const salt = await bcrypt.genSalt(10);
             user.password = await bcrypt.hash(password, 10);
         }
 
-        // ✅ Save the user
+        // Save the user
         await user.save();
 
         res.status(200).json({
@@ -137,6 +131,7 @@ const updateUserProfile = async (req, res) => {
     }
 };
 
+//delete user
 const deleteUser = async (req, res) => {
     try {
         const { id } = req.params;

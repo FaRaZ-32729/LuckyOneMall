@@ -8,7 +8,7 @@ const venueModel = require("../models/venueModal");
 // };
 
 const generateApiKey = (deviceId, conditions) => {
-    let rawString = deviceId; // start with device ID
+    let rawString = deviceId;
 
     conditions.forEach(cond => {
         rawString += `|${cond.type}${cond.operator}${cond.value}`;
@@ -17,28 +17,29 @@ const generateApiKey = (deviceId, conditions) => {
     return Buffer.from(rawString).toString("base64");
 };
 
+// create devices
 const createDevice = async (req, res) => {
     try {
         const { deviceId, venueId, conditions } = req.body;
 
-        // 1️⃣ Basic field validation
-        if (!deviceId || !venueId) {
-            return res.status(400).json({ message: "deviceId and venueId are required" });
+        // Basic field validation
+        if (!deviceId || !venueId || !conditions) {
+            return res.status(400).json({ message: "deviceId , venueId and conditions are required" });
         }
 
-        // 2️⃣ Check venue existence
+        // Check venue existence
         const venue = await venueModel.findById(venueId);
         if (!venue) {
             return res.status(404).json({ message: "Venue not found" });
         }
 
-        // 3️⃣ Prevent duplicate device
+        // Prevent duplicate device
         const existing = await deviceModel.findOne({ deviceId });
         if (existing) {
             return res.status(400).json({ message: "Device ID already exists" });
         }
 
-        // 4️⃣ Validate conditions array
+        // Validate conditions array
         if (conditions) {
             if (!Array.isArray(conditions)) {
                 return res.status(400).json({ message: "Conditions must be an array" });
@@ -85,14 +86,14 @@ const createDevice = async (req, res) => {
             }
         }
 
-        // 5️⃣ Generate API Key
+        // Generate API Key
         const apiKey = generateApiKey(deviceId, conditions || []);
 
-        // 6️⃣ Save device
+        // Save device
         const newDevice = await deviceModel.create({
             deviceId,
             venue: venueId,
-            conditions: conditions || [],
+            conditions: conditions,
             apiKey,
         });
 
@@ -106,7 +107,7 @@ const createDevice = async (req, res) => {
     }
 };
 
-
+// get all devices
 const getAllDevices = async (req, res) => {
     try {
         const devices = await deviceModel.find()
@@ -121,6 +122,7 @@ const getAllDevices = async (req, res) => {
     }
 };
 
+// get single device by deviceId
 const getSingleDevice = async (req, res) => {
     try {
         const { id } = req.params;
@@ -133,6 +135,7 @@ const getSingleDevice = async (req, res) => {
     }
 }
 
+// get devices by venueId
 const getDevicesByVenue = async (req, res) => {
     try {
         const { venueId } = req.params;
@@ -154,22 +157,24 @@ const getDevicesByVenue = async (req, res) => {
     }
 };
 
+// update devices 
+// NOTE :  if user updates deviceId and Conditons than new apiKey will generate otherwise apiKey remains same
 const updateDevice = async (req, res) => {
     try {
         const { id } = req.params;
         const { deviceId, venueId, conditions } = req.body;
 
-        // 1️⃣ Find device first
+        // Find device first
         const device = await deviceModel.findById(id);
         if (!device) {
             return res.status(404).json({ message: "Device not found" });
         }
 
-        // Track original values (to check if API Key should change)
+        
         const oldDeviceId = device.deviceId;
         const oldConditions = JSON.stringify(device.conditions);
 
-        // 2️⃣ Validate venue if supplied
+        // Validate venue if supplied
         if (venueId) {
             const venue = await venueModel.findById(venueId);
             if (!venue) {
@@ -177,7 +182,7 @@ const updateDevice = async (req, res) => {
             }
         }
 
-        // 3️⃣ If deviceId is updated, check duplicate
+        // If deviceId is updated, check duplicate
         if (deviceId && deviceId !== device.deviceId) {
             const exists = await deviceModel.findOne({ deviceId });
             if (exists) {
@@ -187,7 +192,7 @@ const updateDevice = async (req, res) => {
             }
         }
 
-        // 4️⃣ Validate conditions if provided
+        // Validate conditions if provided
         if (conditions) {
             if (!Array.isArray(conditions)) {
                 return res.status(400).json({ message: "Conditions must be an array" });
@@ -232,22 +237,19 @@ const updateDevice = async (req, res) => {
             }
         }
 
-        // 5️⃣ Apply updates
         if (deviceId) device.deviceId = deviceId;
         if (venueId) device.venue = venueId;
         if (conditions) device.conditions = conditions;
 
-        // 6️⃣ Regenerate API key ONLY IF deviceId OR conditions changed
+        // Regenerate API key ONLY IF deviceId OR conditions changed
         const newConditions = JSON.stringify(device.conditions);
 
         if (deviceId !== oldDeviceId || newConditions !== oldConditions) {
             device.apiKey = generateApiKey(device.deviceId, device.conditions);
         }
 
-        // 7️⃣ Save
         await device.save();
 
-        // 8️⃣ Populate venue before sending response
         const populatedDevice = await deviceModel
             .findById(device._id)
             .populate("venue");
@@ -263,7 +265,7 @@ const updateDevice = async (req, res) => {
     }
 };
 
-
+// delete device by id
 const deleteDevice = async (req, res) => {
     try {
         const { id } = req.params;

@@ -1,7 +1,7 @@
 const orgModel = require("../models/organizationModel");
 const userModel = require("../models/userModel");
 
-// CREATE
+// create organization
 const createOrganization = async (req, res) => {
     try {
         let { name } = req.body;
@@ -31,10 +31,13 @@ const createOrganization = async (req, res) => {
     }
 };
 
-// READ
+// get organizations
 const getOrganizations = async (req, res) => {
     try {
         const orgs = await orgModel.find();
+
+        if (!orgs) return res.status(404).json({ message: "No Organizations Found" });
+
         res.status(200).json(orgs);
     } catch (error) {
         console.log("error to fetch organizations");
@@ -70,7 +73,7 @@ const getOrganizationById = async (req, res) => {
     }
 };
 
-// GET ORGANIZATION BY USER ID
+// get organization by user id
 const getOrganizationByUserId = async (req, res) => {
     try {
         const { userId } = req.params;
@@ -106,7 +109,7 @@ const getOrganizationByUserId = async (req, res) => {
 };
 
 
-// UPDATE
+// update organizations
 const updateOrganization = async (req, res) => {
     try {
         const { id } = req.params;
@@ -149,7 +152,7 @@ const updateOrganization = async (req, res) => {
     }
 };
 
-// DELETE
+// delete organizations by id
 const deleteOrganization = async (req, res) => {
     try {
         const { id } = req.params;

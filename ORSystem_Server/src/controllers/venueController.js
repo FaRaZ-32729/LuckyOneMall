@@ -1,6 +1,6 @@
 const venueModel = require("../models/venueModal");
 
-
+// create venue
 const createVenue = async (req, res) => {
     try {
         const { name, organization } = req.body;
@@ -26,19 +26,29 @@ const createVenue = async (req, res) => {
     }
 };
 
+// get all venues
 const getVenues = async (req, res) => {
     try {
         const venues = await venueModel.find().populate("organization");
-        res.json(venues);
+
+        if (!venues) return res.status(404).json({ message: "No Venue Found" });
+
+        return res.json(venues);
+
     } catch (error) {
-        res.status(500).json({ message: "Error fetching venues" });
+        return res.status(500).json({ message: "Error fetching venues" });
     }
 };
 
+// get single venue by id
 const getSingleVenue = async (req, res) => {
     try {
         const { id } = req.params;
+
         const venue = await venueModel.findById(id).populate("organization", "name");
+
+        if (!venue) return res.status(404).json({ message: "No Venue Found" });
+
         return res.status(200).json({ venue });
 
     } catch (error) {
@@ -47,6 +57,7 @@ const getSingleVenue = async (req, res) => {
     }
 }
 
+// get venues by organizationId
 const getVenuesByOrganization = async (req, res) => {
     try {
         const { organizationId } = req.params;
@@ -66,7 +77,7 @@ const getVenuesByOrganization = async (req, res) => {
     }
 };
 
-
+// update venue
 const updateVenue = async (req, res) => {
     try {
         const { id } = req.params;
@@ -103,7 +114,7 @@ const updateVenue = async (req, res) => {
     }
 };
 
-
+// delete venue
 const deleteVenue = async (req, res) => {
     try {
         const { id } = req.params;
