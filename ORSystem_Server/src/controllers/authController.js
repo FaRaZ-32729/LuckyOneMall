@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const sendEmail = require("../utils/sendEmail");
 const organizationModel = require("../models/organizationModel");
+const venueModel = require("../models/venueModal");
 
 // api for registering admin
 const registerAdmin = async (req, res) => {
@@ -33,7 +34,7 @@ const registerAdmin = async (req, res) => {
             isActive: true,
             isVerified: true,
             createdBy: "admin",
-            organization : null
+            organization: null
         });
 
         return res.status(201).json({ message: "Admin Created Successfully", Admin: newAdmin })
@@ -45,74 +46,206 @@ const registerAdmin = async (req, res) => {
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 
 // api for creating user 
+// const createUser = async (req, res) => {
+//     try {
+//         const { name, email, role, organizationId } = req.body;
+
+//         if (!name || !email || !role)
+//             return res.status(400).json({ message: "All fields are required" });
+
+//         const creator = req.user; // logged-in user
+
+//         // Access control
+//         if (creator.role === "user" && creator.createdBy === "user") {
+//             return res.status(403).json({ message: "Access Denied: You cannot create users" });
+//         }
+
+//         let finalOrganizationId;
+
+//         // CASE 1: user already has organization
+//         if (creator.organization) {
+//             finalOrganizationId = creator.organization;
+//         }
+//         // CASE 2: admin create a user
+//         else {
+//             if (!organizationId) {
+//                 return res.status(400).json({ message: "Organization ID is required" });
+//             }
+
+//             // Check if organization already assigned
+//             const orgAssigned = await userModel.findOne({ organization: organizationId });
+//             if (orgAssigned) {
+//                 return res.status(400).json({
+//                     message: `This organization is already assigned to ${orgAssigned.email}`,
+//                 });
+//             }
+
+//             finalOrganizationId = organizationId;
+//         }
+
+//         // Check organization exists
+//         const organization = await organizationModel.findById(finalOrganizationId);
+//         if (!organization)
+//             return res.status(404).json({ message: "Organization not found" });
+
+//         // Check email exists
+//         const existingEmail = await userModel.findOne({ email });
+//         if (existingEmail)
+//             return res.status(400).json({ message: "User with this email already exists" });
+
+//         // Create token for setup password link
+//         const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: "1d" });
+
+//         // Create user
+//         const user = await userModel.create({
+//             name,
+//             email,
+//             role,
+//             organization: finalOrganizationId,
+//             createdBy: creator.role,
+//             setupToken: token,
+//             isActive: false,
+//             isVerified: false,
+//         });
+
+//         // Setup password link
+//         const setupLink = `http://localhost:5173/setup-password/${token}`;
+
+//         // Send email
+//         await sendEmail(
+//             user.email,
+//             "Set up your FrostKontroll account",
+//             `
+//             <div style="font-family: Arial, sans-serif; color: #333; background: #f5f8fa; padding: 20px; border-radius: 8px;">
+//                 <div style="text-align: center;">
+//                     <img src="cid:companyLogo" alt="FrostKontroll Logo" style="width: 120px; margin-bottom: 20px;" />
+//                 </div>
+//                 <h2 style="color: #0055a5;">Welcome to FrostKontroll!</h2>
+//                 <p>Hello <b>${user.name || user.email}</b>,</p>
+//                 <p>Your account has been created. Please click below to set your password:</p>
+
+//                 <div style="text-align: center; margin: 20px 0;">
+//                     <a href="${setupLink}"
+//                        style="background-color: #0055a5; color: white; padding: 12px 24px; border-radius: 4px; text-decoration: none; font-size: 16px;">
+//                        Set Password
+//                     </a>
+//                 </div>
+
+//                 <p style="font-size: 14px; color: #555;">
+//                     This link will expire in 24 hours. If you didn't expect this email, ignore it.
+//                 </p>
+//                 <hr/>
+//                 <p style="font-size: 12px; text-align: center; color: #888;">
+//                     © ${new Date().getFullYear()} FrostKontroll. All rights reserved.
+//                 </p>
+//             </div>
+//             `
+//         );
+
+//         const populatedUser = await userModel
+//             .findById(user._id)
+//             .populate("organization", "name");
+
+//         res.status(201).json({
+//             message: "User created and setup link sent",
+//             user: populatedUser
+//         });
+
+//     } catch (err) {
+//         console.error(err);
+//         res.status(500).json({ message: "Error creating user" });
+//     }
+// };
+
 const createUser = async (req, res) => {
     try {
-        const { name, email, role, organizationId } = req.body;
+        const { name, email, role, organizationId, venues } = req.body;
 
         if (!name || !email || !role)
             return res.status(400).json({ message: "All fields are required" });
 
         const creator = req.user; // logged-in user
 
-        // Access control
+        // RULE 1: Only admins OR users that are createdBy: "admin" can create users
         if (creator.role === "user" && creator.createdBy === "user") {
             return res.status(403).json({ message: "Access Denied: You cannot create users" });
         }
 
         let finalOrganizationId;
 
-        // CASE 1: user already has organization
+        // CASE 1: creator already belongs to an org
         if (creator.organization) {
             finalOrganizationId = creator.organization;
         }
-        // CASE 2: admin create a user
+        // CASE 2: admin must provide organizationId
         else {
             if (!organizationId) {
                 return res.status(400).json({ message: "Organization ID is required" });
             }
 
-            // Check if organization already assigned
-            const orgAssigned = await userModel.findOne({ organization: organizationId });
-            if (orgAssigned) {
-                return res.status(400).json({
-                    message: `This organization is already assigned to ${orgAssigned.email}`,
-                });
-            }
-
             finalOrganizationId = organizationId;
         }
 
-        // Check organization exists
+        // Confirm organization exists
         const organization = await organizationModel.findById(finalOrganizationId);
         if (!organization)
             return res.status(404).json({ message: "Organization not found" });
 
-        // Check email exists
+        // Check duplicate email
         const existingEmail = await userModel.findOne({ email });
         if (existingEmail)
             return res.status(400).json({ message: "User with this email already exists" });
 
-        // Create token for setup password link
+        /* ---------------- VENUE VALIDATION (ONLY FOR USER CREATED USERS) ---------------- */
+        let assignedVenues = [];
+
+        if (creator.role === "user") {
+            if (!venues || venues.length === 0) {
+                return res.status(400).json({
+                    message: "You must assign at least one venue"
+                });
+            }
+
+            // Validate venues belong to same organization
+            const validVenues = await venueModel.find({
+                _id: { $in: venues },
+                organization: creator.organization
+            });
+
+            if (validVenues.length !== venues.length) {
+                return res.status(400).json({
+                    message: "One or more venues are invalid or not in your organization"
+                });
+            }
+
+            // assignedVenues = venues;
+            assignedVenues = validVenues.map(v => ({
+                venueId: v._id,
+                venueName: v.name
+            }));
+        }
+
+        /* ---------------- SETUP PASSWORD TOKEN ---------------- */
         const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: "1d" });
 
-        // Create user
-        const user = await userModel.create({
+        /* ---------------- CREATE USER ---------------- */
+        const newUser = await userModel.create({
             name,
             email,
             role,
             organization: finalOrganizationId,
+            venues: assignedVenues,
             createdBy: creator.role,
             setupToken: token,
             isActive: false,
             isVerified: false,
         });
 
-        // Setup password link
+        /* ---------------- SEND SETUP EMAIL ---------------- */
         const setupLink = `http://localhost:5173/setup-password/${token}`;
 
-        // Send email
         await sendEmail(
-            user.email,
+            newUser.email,
             "Set up your FrostKontroll account",
             `
             <div style="font-family: Arial, sans-serif; color: #333; background: #f5f8fa; padding: 20px; border-radius: 8px;">
@@ -120,9 +253,9 @@ const createUser = async (req, res) => {
                     <img src="cid:companyLogo" alt="FrostKontroll Logo" style="width: 120px; margin-bottom: 20px;" />
                 </div>
                 <h2 style="color: #0055a5;">Welcome to FrostKontroll!</h2>
-                <p>Hello <b>${user.name || user.email}</b>,</p>
+                <p>Hello <b>${newUser.name || newUser.email}</b>,</p>
                 <p>Your account has been created. Please click below to set your password:</p>
-                
+
                 <div style="text-align: center; margin: 20px 0;">
                     <a href="${setupLink}"
                        style="background-color: #0055a5; color: white; padding: 12px 24px; border-radius: 4px; text-decoration: none; font-size: 16px;">
@@ -141,9 +274,11 @@ const createUser = async (req, res) => {
             `
         );
 
+        /* ---------------- RESPONSE WITH POPULATION ---------------- */
         const populatedUser = await userModel
-            .findById(user._id)
-            .populate("organization", "name");
+            .findById(newUser._id)
+            .populate("organization", "name")
+            .populate("venues", "name");
 
         res.status(201).json({
             message: "User created and setup link sent",
@@ -155,6 +290,8 @@ const createUser = async (req, res) => {
         res.status(500).json({ message: "Error creating user" });
     }
 };
+
+
 
 // set password
 const setPassword = async (req, res) => {

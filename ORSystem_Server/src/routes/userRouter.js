@@ -6,7 +6,7 @@ const authenticate = require("../middlewere/authMiddleware");
 const router = express.Router();
 
 router.put("/update-status/:id", authenticate, adminOnly, updateUserStatus);
-router.get("/all", authenticate, adminOnly, getAllUsers);
+router.get("/all",  getAllUsers);
 router.put("/update/:id", authenticate, adminOnly, updateUserProfile);
 router.delete("/delete/:id", authenticate, adminOnly, deleteUser);
 
