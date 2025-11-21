@@ -177,4 +177,6 @@ const deleteOrganization = async (req, res) => {
     }
 };
 
+
+
 module.exports = { createOrganization, getOrganizations, updateOrganization, deleteOrganization, getOrganizationById, getOrganizationByUserId }

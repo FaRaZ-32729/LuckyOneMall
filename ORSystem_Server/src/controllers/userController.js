@@ -1,6 +1,9 @@
 const userModel = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const sendEmail = require("../utils/sendEmail");
+const organizationModel = require("../models/organizationModel");
+const mongoose = require("mongoose");
+const venueModel = require("../models/venueModal");
 
 //get all users for admin
 const getAllUsers = async (req, res) => {
@@ -150,5 +153,137 @@ const deleteUser = async (req, res) => {
     }
 };
 
+// add new venue in user's venue array
+const addVenueToUser = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { venueId } = req.body;
 
-module.exports = { getAllUsers, updateUserStatus, updateUserProfile, deleteUser }
+        // Validate userId and venueId
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ message: "Invalid userId" });
+        }
+        if (!mongoose.Types.ObjectId.isValid(venueId)) {
+            return res.status(400).json({ message: "Invalid venueId" });
+        }
+
+        // Check if user exists
+        const user = await userModel.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        //  Check if venue exists
+        const venue = await venueModel.findById(venueId);
+        if (!venue) {
+            return res.status(404).json({ message: "Venue not found" });
+        }
+
+        // Add venue to user's venues array in the desired format
+        user.venues.push({
+            venueId: venue._id,
+            venueName: venue.name
+        });
+
+        await user.save();
+
+        const populatedUser = await userModel.findById(userId).populate("venues.venueId", "venueName");
+
+        res.status(200).json({
+            message: "Venue added to user successfully",
+            user: populatedUser,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// remove a venue form user's venue array
+const removeVenueFromUser = async (req, res) => {
+    try {
+        const { userId, venueId } = req.params;
+
+        // Validate userId and venueId
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ message: "Invalid userId" });
+        }
+        if (!mongoose.Types.ObjectId.isValid(venueId)) {
+            return res.status(400).json({ message: "Invalid venueId" });
+        }
+
+        // Check if user exists
+        const user = await userModel.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Check if venue exists in user's venues array
+        const venueExists = user.venues.some(v => v.venueId.toString() === venueId);
+        if (!venueExists) {
+            return res.status(404).json({ message: "Venue not assigned to this user" });
+        }
+
+        // Check if venue exists in the database
+        const venue = await venueModel.findById(venueId);
+        if (!venue) {
+            return res.status(404).json({ message: "Venue not found" });
+        }
+
+        // Remove venue
+        const updatedUser = await userModel.findByIdAndUpdate(
+            userId,
+            { $pull: { venues: { venueId: venueId } } },
+            { new: true }
+        ).populate("venues.venueId", "venueName");
+
+        res.status(200).json({
+            message: "Venue removed from user successfully",
+            user: updatedUser,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: error.message });
+    }
+}
+
+// get users by organization id
+const getUsersByOrganizationId = async (req, res) => {
+    try {
+        const { orgId } = req.params;
+
+        if (!orgId) {
+            return res.status(400).json({ message: "Organization ID is required" });
+        }
+
+        // Check if organization exists
+        const org = await organizationModel.findById(orgId);
+        if (!org) {
+            return res.status(404).json({ message: "Organization not found" });
+        }
+
+        // Find all users belonging to this organization
+        const users = await userModel
+            .find({ organization: orgId })
+            .select("-password -otp -otpExpiry -resetToken -resetTokenExpiry -setupToken -suspensionReason -isActive -isVerified -role") // exclude sensitive fields
+            .populate("venues", "venueName"); // optional, if you want venue names
+
+        if (!users || users.length === 0) {
+            return res.status(404).json({ message: "No users found for this organization" });
+        }
+
+        res.status(200).json({
+            message: `Users for organization '${org.name}' fetched successfully`,
+            users,
+        });
+
+    } catch (err) {
+        console.error("Error fetching users by organization ID:", err);
+        res.status(500).json({
+            message: "Internal Server Error while fetching users by organization ID",
+        });
+    }
+};
+
+
+module.exports = { getAllUsers, updateUserStatus, updateUserProfile, deleteUser, getUsersByOrganizationId, addVenueToUser, removeVenueFromUser }
