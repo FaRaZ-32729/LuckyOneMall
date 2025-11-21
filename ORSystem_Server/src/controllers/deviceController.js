@@ -170,9 +170,14 @@ const updateDevice = async (req, res) => {
             return res.status(404).json({ message: "Device not found" });
         }
 
-        
+
         const oldDeviceId = device.deviceId;
-        const oldConditions = JSON.stringify(device.conditions);
+        // const oldConditions = JSON.stringify(device.conditions);
+        const oldConditions = device.conditions.map(c => ({
+            type: c.type,
+            operator: c.operator,
+            value: c.value
+        }));
 
         // Validate venue if supplied
         if (venueId) {
@@ -242,10 +247,21 @@ const updateDevice = async (req, res) => {
         if (conditions) device.conditions = conditions;
 
         // Regenerate API key ONLY IF deviceId OR conditions changed
-        const newConditions = JSON.stringify(device.conditions);
+        // const newConditions = JSON.stringify(device.conditions);
+        let newApiKeyGenerated = false
 
-        if (deviceId !== oldDeviceId || newConditions !== oldConditions) {
-            device.apiKey = generateApiKey(device.deviceId, device.conditions);
+        // if (deviceId !== oldDeviceId || newConditions !== oldConditions) {
+        //     device.apiKey = generateApiKey(device.deviceId, device.conditions);
+        //     newApiKeyGenerated = true;
+        // }
+
+        const newConditions = conditions
+            ? conditions.map(c => ({ type: c.type, operator: c.operator, value: c.value }))
+            : oldConditions;
+
+        if ((deviceId && deviceId !== oldDeviceId) || JSON.stringify(oldConditions) !== JSON.stringify(newConditions)) {
+            device.apiKey = generateApiKey(deviceId || oldDeviceId, newConditions);
+            newApiKeyGenerated = true;
         }
 
         await device.save();
@@ -254,8 +270,12 @@ const updateDevice = async (req, res) => {
             .findById(device._id)
             .populate("venue");
 
+        const message = newApiKeyGenerated
+            ? "New API key generated! Please reconfigure your device."
+            : "Device updated successfully";
+
         return res.status(200).json({
-            message: "Device updated successfully",
+            message,
             device: populatedDevice,
         });
 
