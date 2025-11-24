@@ -1,4 +1,5 @@
 const WebSocket = require("ws");
+const deviceModel = require("../models/deviceModel");
 // const deviceModel = require("../models/deviceModel");
 
 // function espAlertSocket(server) {
@@ -73,9 +74,23 @@ const espAlertSocket = (server) => {
             try {
                 const data = JSON.parse(message);
                 console.log("parsed json data", data);
+
+                await deviceModel.findOneAndUpdate(
+                    { deviceId: data.deviceId },
+                    {
+                        espTemprature: data.temperature,
+                        espHumidity: data.humidity,
+                        temperatureAlert: data.temperatureAlert,
+                        humidityAlert: data.humidityAlert,
+                        odourAlert: data.odourAlert
+                    },
+                    { upsert: true, new: true }
+                );
             } catch (error) {
-                console.log("error while parsing json data", error.message);
+                console.log("trouble while getting data or updating Mongodb");
+                console.error("error: ", error.message)
             }
+
         });
 
         ws.on("close", (code, reason) => {

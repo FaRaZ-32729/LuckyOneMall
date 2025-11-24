@@ -285,5 +285,25 @@ const getUsersByOrganizationId = async (req, res) => {
     }
 };
 
+const getUserStatus = async (req, res) => {
+    try {
+        const { userId } = req.params;
 
-module.exports = { getAllUsers, updateUserStatus, updateUserProfile, deleteUser, getUsersByOrganizationId, addVenueToUser, removeVenueFromUser }
+        const user = await userModel.findById(userId).select("isActive");
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.status(200).json({
+            isActive: user.isActive
+        });
+
+    } catch (error) {
+        console.error("Error fetching user status:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+
+module.exports = { getAllUsers, updateUserStatus, updateUserProfile, deleteUser, getUsersByOrganizationId, addVenueToUser, removeVenueFromUser, getUserStatus }
