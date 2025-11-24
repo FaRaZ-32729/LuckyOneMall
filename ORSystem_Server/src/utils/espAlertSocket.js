@@ -1,62 +1,103 @@
-// src/utils/espSocket.js
 const WebSocket = require("ws");
-const deviceModel = require("../models/deviceModel"); // Import your Device model
+// const deviceModel = require("../models/deviceModel");
 
-function espAlertSocket(server) {
-    const wss = new WebSocket.Server({ noServer: true });
+// function espAlertSocket(server) {
+//     const wss = new WebSocket.Server({ noServer: true });
 
-    console.log("🔌 ESP32 WebSocket Server initialized");
+//     console.log("🔌 ESP32 WebSocket Server initialized");
 
-    wss.on("connection", (ws, req) => {
-        const clientIP = req.socket.remoteAddress;
-        console.log(`✅ ESP32 connected from ${clientIP}`);
+//     wss.on("connection", (ws, req) => {
+//         const clientIP = req.socket.remoteAddress;
+//         console.log(`✅ ESP32 connected from ${clientIP}`);
+
+//         ws.on("message", async (message) => {
+//             console.log(`📩 Raw message received: ${message.toString()}`);
+
+//             // try {
+//             //     const data = JSON.parse(message);
+//             //     console.log("📦 Parsed JSON Data:", data);
+
+//             //     console.log(
+//             //         `🌡️ Data -> Device: ${data.deviceId} | Ambient: ${data.ambient}°C | Freezer: ${data.freezer}°C | Battery: ${data.batteryAlert} | Refrigerator: ${data.refrigeratorAlert}`
+//             //     );
+
+//             //     // Update or insert device data in MongoDB
+//             //     // await deviceModel.findOneAndUpdate(
+//             //     //     { deviceId: data.deviceId },
+//             //     //     {
+//             //     //         AmbientData: { temperature: parseFloat(data.ambient) },
+//             //     //         FreezerData: { temperature: parseFloat(data.freezer) },
+//             //     //         batteryAlert: data.batteryAlert === "LOW",
+//             //     //         refrigeratorAlert: data.refrigeratorAlert === "ALERT",
+//             //     //         lastSeen: new Date(), // optional: track last time device sent data
+//             //     //     },
+//             //     //     { upsert: true, new: true }
+//             //     // );
+//             // } catch (err) {
+//             //     console.error("❌ JSON Parse or DB Error:", err.message);
+//             // }
+
+//         });
+
+//         ws.on("close", (code, reason) => {
+//             console.log(`❌ ESP32 disconnected (code: ${code}, reason: ${reason})`);
+//         });
+
+//         ws.on("error", (err) => {
+//             console.error("⚠️ WebSocket Error:", err.message);
+//         });
+
+//         // Send confirmation to ESP32
+//         setTimeout(() => {
+//             if (ws.readyState === WebSocket.OPEN) {
+//                 ws.send('{"serverMsg":"Hello ESP32, connection OK!"}');
+//                 console.log("📤 Sent confirmation message to ESP32");
+//             }
+//         }, 1000);
+//     });
+
+//     return wss;
+// }
+
+const espAlertSocket = (server) => {
+    const wSocket = new WebSocket.Server({ noServer: true });
+    console.log("web-socket initialized");
+
+    wSocket.on("connection", (ws, req) => {
+        const serverIp = req.socket.remoteAddress;
+        console.log(`esp32 connected from ${serverIp}`);
 
         ws.on("message", async (message) => {
-            console.log(`📩 Raw message received: ${message.toString()}`);
+            console.log(message.toString());
 
             try {
                 const data = JSON.parse(message);
-                console.log("📦 Parsed JSON Data:", data);
-
-                console.log(
-                    `🌡️ Data -> Device: ${data.deviceId} | Ambient: ${data.ambient}°C | Freezer: ${data.freezer}°C | Battery: ${data.batteryAlert} | Refrigerator: ${data.refrigeratorAlert}`
-                );
-
-                // Update or insert device data in MongoDB
-                await deviceModel.findOneAndUpdate(
-                    { deviceId: data.deviceId },
-                    {
-                        AmbientData: { temperature: parseFloat(data.ambient) },
-                        FreezerData: { temperature: parseFloat(data.freezer) },
-                        batteryAlert: data.batteryAlert === "LOW",
-                        refrigeratorAlert: data.refrigeratorAlert === "ALERT",
-                        lastSeen: new Date(), // optional: track last time device sent data
-                    },
-                    { upsert: true, new: true }
-                );
-            } catch (err) {
-                console.error("❌ JSON Parse or DB Error:", err.message);
+                console.log("parsed json data", data);
+            } catch (error) {
+                console.log("error while parsing json data", error.message);
             }
         });
 
         ws.on("close", (code, reason) => {
-            console.log(`❌ ESP32 disconnected (code: ${code}, reason: ${reason})`);
+            console.log(`esp32 disconnected (code: ${code} , reason: ${reason} )`);
         });
 
-        ws.on("error", (err) => {
-            console.error("⚠️ WebSocket Error:", err.message);
+        ws.on("error", (error) => {
+            console.error("Web-Socket Error", error.message);
         });
 
-        // Send confirmation to ESP32
         setTimeout(() => {
             if (ws.readyState === WebSocket.OPEN) {
-                ws.send('{"serverMsg":"Hello ESP32, connection OK!"}');
-                console.log("📤 Sent confirmation message to ESP32");
+                ws.send('{"serverMsg : Hellow ESP32}');
+                console.log("Confirmation Message Send to ESP32");
             }
         }, 1000);
     });
 
-    return wss;
+
+    return wSocket;
 }
 
 module.exports = { espAlertSocket };
+
+
