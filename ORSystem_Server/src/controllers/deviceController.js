@@ -54,7 +54,7 @@ const createDevice = async (req, res) => {
                 }
 
                 // Allowed type values
-                const validTypes = ["temperature", "humidity", "odour"];
+                const validTypes = ["temperature", "humidity"];
                 if (!validTypes.includes(cond.type)) {
                     return res.status(400).json({
                         message: `Invalid type "${cond.type}". Allowed types: ${validTypes.join(", ")}`,
@@ -62,27 +62,27 @@ const createDevice = async (req, res) => {
                 }
 
                 // Allowed operators
-                const validOps = [">", "<", "="];
+                const validOps = [">", "<"];
                 if (!validOps.includes(cond.operator)) {
                     return res.status(400).json({
-                        message: `Invalid operator "${cond.operator}". Allowed operators: >, <, =`,
+                        message: `Invalid operator "${cond.operator}". Allowed operators: >, <`,
                     });
                 }
 
                 // Type-based validation
-                if (cond.type === "odour") {
-                    if (typeof cond.value !== "boolean") {
-                        return res.status(400).json({
-                            message: `Value for odour must be boolean (true/false)`,
-                        });
-                    }
-                } else {
-                    if (typeof cond.value !== "number" || !Number.isFinite(cond.value)) {
-                        return res.status(400).json({
-                            message: `Value for ${cond.type} must be a valid number`,
-                        });
-                    }
-                }
+                // if (cond.type === "odour") {
+                //     if (typeof cond.value !== "boolean") {
+                //         return res.status(400).json({
+                //             message: `Value for odour must be boolean (true/false)`,
+                //         });
+                //     }
+                // } else {
+                //     if (typeof cond.value !== "number" || !Number.isFinite(cond.value)) {
+                //         return res.status(400).json({
+                //             message: `Value for ${cond.type} must be a valid number`,
+                //         });
+                //     }
+                // }
             }
         }
 
@@ -203,8 +203,8 @@ const updateDevice = async (req, res) => {
                 return res.status(400).json({ message: "Conditions must be an array" });
             }
 
-            const validTypes = ["temperature", "humidity", "odour"];
-            const validOps = [">", "<", "="];
+            const validTypes = ["temperature", "humidity"];
+            const validOps = [">", "<"];
 
             for (const cond of conditions) {
                 if (!cond.type || !cond.operator || cond.value === undefined) {
@@ -221,24 +221,24 @@ const updateDevice = async (req, res) => {
 
                 if (!validOps.includes(cond.operator)) {
                     return res.status(400).json({
-                        message: `Invalid operator "${cond.operator}". Allowed: >, <, =`,
+                        message: `Invalid operator "${cond.operator}". Allowed: >, <`,
                     });
                 }
 
                 // type-based validation
-                if (cond.type === "odour") {
-                    if (typeof cond.value !== "boolean") {
-                        return res.status(400).json({
-                            message: "Value for odour must be boolean (true/false)",
-                        });
-                    }
-                } else {
-                    if (typeof cond.value !== "number" || !Number.isFinite(cond.value)) {
-                        return res.status(400).json({
-                            message: `Value for ${cond.type} must be a valid number`,
-                        });
-                    }
-                }
+                // if (cond.type === "odour") {
+                //     if (typeof cond.value !== "boolean") {
+                //         return res.status(400).json({
+                //             message: "Value for odour must be boolean (true/false)",
+                //         });
+                //     }
+                // } else {
+                //     if (typeof cond.value !== "number" || !Number.isFinite(cond.value)) {
+                //         return res.status(400).json({
+                //             message: `Value for ${cond.type} must be a valid number`,
+                //         });
+                //     }
+                // }
             }
         }
 

@@ -80,9 +80,9 @@ const espAlertSocket = (server) => {
                     {
                         espTemprature: data.temperature,
                         espHumidity: data.humidity,
-                        temperatureAlert: data.temperatureAlert,
-                        humidityAlert: data.humidityAlert,
-                        odourAlert: data.odourAlert
+                        temperatureAlert: data.temperatureAlert === "HIGH",
+                        humidityAlert: data.humidityAlert === "HIGH",
+                        odourAlert: data.odourAlert === "DETECTED"
                     },
                     { upsert: true, new: true }
                 );
