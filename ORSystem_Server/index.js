@@ -41,8 +41,8 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/users", userRouter);
 app.use("/auth", authRouter);
 app.use("/organization", authenticate, orgRouter);
-app.use("/venue",  venueRouter);
-app.use("/device",   deviceRouter);
+app.use("/venue", authenticate, venueRouter);
+app.use("/device", deviceRouter);
 app.use("/alert", alertsRouter);
 
 
@@ -65,6 +65,6 @@ server.on("upgrade", (req, socket, head) => {
 //     console.log(`Express & Socket.IO running on port: ${port}`);
 // });
 
-server.listen(port , ()=> {
+server.listen(port, () => {
     console.log(`Express & WebSocket is running on port : ${port}`);
 })

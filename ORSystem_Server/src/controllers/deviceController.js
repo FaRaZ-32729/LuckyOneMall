@@ -1,11 +1,7 @@
 const deviceModel = require("../models/deviceModel");
 const venueModel = require("../models/venueModal");
 
-// Helper function to generate Base64 API key
-// const generateApiKey = (deviceId, conditions) => {
-//     const data = JSON.stringify({ deviceId, conditions });
-//     return Buffer.from(data).toString("base64");
-// };
+
 
 const generateApiKey = (deviceId, conditions) => {
     let rawString = deviceId;
