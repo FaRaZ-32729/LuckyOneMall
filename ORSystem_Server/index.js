@@ -42,13 +42,13 @@ app.use("/users", userRouter);
 app.use("/auth", authRouter);
 app.use("/organization", authenticate, orgRouter);
 app.use("/venue", authenticate, venueRouter);
-app.use("/device", deviceRouter);
-app.use("/alert", alertsRouter);
+app.use("/device", authenticate, deviceRouter);
+app.use("/alert", authenticate, alertsRouter);
 
 
 const alertWss = espAlertSocket(server);
 
-// alerts ws://ip:5000/ws/alerts
+// alerts ws://ip/localhost:5000/ws/alerts
 server.on("upgrade", (req, socket, head) => {
     if (req.url === "/ws/alerts") {
         alertWss.handleUpgrade(req, socket, head, (ws) => {
@@ -61,10 +61,6 @@ server.on("upgrade", (req, socket, head) => {
 
 
 // Start server
-// server.listen(port, "0.0.0.0", () => {
-//     console.log(`Express & Socket.IO running on port: ${port}`);
-// });
-
 server.listen(port, () => {
     console.log(`Express & WebSocket is running on port : ${port}`);
 })

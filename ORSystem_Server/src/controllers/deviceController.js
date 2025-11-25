@@ -19,7 +19,7 @@ const createDevice = async (req, res) => {
         const { deviceId, venueId, conditions } = req.body;
 
         // Basic field validation
-        if (!deviceId || !venueId || !conditions) {
+        if (!deviceId || !venueId || conditions.length === 0) {
             return res.status(400).json({ message: "deviceId , venueId and conditions are required" });
         }
 
@@ -65,20 +65,6 @@ const createDevice = async (req, res) => {
                     });
                 }
 
-                // Type-based validation
-                // if (cond.type === "odour") {
-                //     if (typeof cond.value !== "boolean") {
-                //         return res.status(400).json({
-                //             message: `Value for odour must be boolean (true/false)`,
-                //         });
-                //     }
-                // } else {
-                //     if (typeof cond.value !== "number" || !Number.isFinite(cond.value)) {
-                //         return res.status(400).json({
-                //             message: `Value for ${cond.type} must be a valid number`,
-                //         });
-                //     }
-                // }
             }
         }
 
@@ -221,20 +207,6 @@ const updateDevice = async (req, res) => {
                     });
                 }
 
-                // type-based validation
-                // if (cond.type === "odour") {
-                //     if (typeof cond.value !== "boolean") {
-                //         return res.status(400).json({
-                //             message: "Value for odour must be boolean (true/false)",
-                //         });
-                //     }
-                // } else {
-                //     if (typeof cond.value !== "number" || !Number.isFinite(cond.value)) {
-                //         return res.status(400).json({
-                //             message: `Value for ${cond.type} must be a valid number`,
-                //         });
-                //     }
-                // }
             }
         }
 
@@ -243,13 +215,7 @@ const updateDevice = async (req, res) => {
         if (conditions) device.conditions = conditions;
 
         // Regenerate API key ONLY IF deviceId OR conditions changed
-        // const newConditions = JSON.stringify(device.conditions);
         let newApiKeyGenerated = false
-
-        // if (deviceId !== oldDeviceId || newConditions !== oldConditions) {
-        //     device.apiKey = generateApiKey(device.deviceId, device.conditions);
-        //     newApiKeyGenerated = true;
-        // }
 
         const newConditions = conditions
             ? conditions.map(c => ({ type: c.type, operator: c.operator, value: c.value }))

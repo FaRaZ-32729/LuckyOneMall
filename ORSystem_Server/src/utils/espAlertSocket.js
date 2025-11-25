@@ -13,8 +13,18 @@ const espAlertSocket = (server) => {
             console.log(message.toString());
 
             try {
-                const data = JSON.parse(message);
-                console.log("parsed json data", data);
+                // const data = JSON.parse(message);
+                // console.log("parsed json data", data);
+
+                let data;
+
+                try {
+                    data = JSON.parse(message);
+                    console.log("parsed json data => ", data);
+                } catch {
+                    console.log("non-JSON message:", message.toString());
+                    return; 
+                }
 
                 await deviceModel.findOneAndUpdate(
                     { deviceId: data.deviceId },
