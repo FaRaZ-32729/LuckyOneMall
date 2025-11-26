@@ -9,8 +9,12 @@ const espAlertSocket = (server) => {
         const serverIp = req.socket.remoteAddress;
         console.log(`esp32 connected from ${serverIp}`);
 
+
+
         ws.on("message", async (message) => {
             console.log(message.toString());
+
+
 
             try {
                 // const data = JSON.parse(message);
@@ -18,12 +22,19 @@ const espAlertSocket = (server) => {
 
                 let data;
 
+
+
                 try {
                     data = JSON.parse(message);
                     console.log("parsed json data => ", data);
                 } catch {
                     console.log("non-JSON message:", message.toString());
-                    return; 
+                    return;
+                }
+
+                if (data.type === "heartbeat") {
+                    ws.lastBeat = Date.now();
+                    return;
                 }
 
                 await deviceModel.findOneAndUpdate(
@@ -44,6 +55,17 @@ const espAlertSocket = (server) => {
             }
 
         });
+
+        setInterval(() => {
+            wSocket.clients.forEach((ws) => {
+                if (!ws.lastBeat) ws.lastBeat = Date.now();
+
+                if (Date.now() - ws.lastBeat > 10000) {
+                    console.log("ESP32 LOST! Force disconnect.");
+                    ws.terminate();
+                }
+            });
+        }, 5000);
 
         ws.on("close", (code, reason) => {
             console.log(`esp32 disconnected (code: ${code} , reason: ${reason} )`);
@@ -66,5 +88,3 @@ const espAlertSocket = (server) => {
 }
 
 module.exports = { espAlertSocket };
-
-

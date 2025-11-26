@@ -1,0 +1,52 @@
+
+ ***USERS ROUTES***
+
+
+create user → Admin, Admin-Created-User (manager)
+view all users → Admin only
+view user status → All
+view users by organization → Admin, Admin-Created-User (manager)
+update user status → Admin only
+update user profile → Admin only
+delete user → Admin only
+add venue to user → Admin, Admin-Created-User (manager)
+remove venue from user → Admin, Admin-Created-User (manager)
+
+
+
+ ***DEVICES ROUTES***
+
+create device → Admin only
+view single device → All
+view devices by venue → All
+view all devices → Admin only
+update device → Admin, Admin-Created-User (manager)
+delete device → Admin only
+
+
+
+ ***ORGANIZATIONS ROUTES***
+
+
+create organization → Admin only
+view all organizations → Admin only
+view organization by user → all
+update organization → Admin only
+delete organization → Admin only
+
+
+
+ ***VENUES ROUTES***
+
+create venue → Admin, Admin-Created-User (manager)
+view all venues → Admin only
+view single venue → All
+view venues by organization → Admin, Admin-Created-User (manager)
+update venue → Admin, Admin-Created-User (manager)
+delete venue → Admin, Admin-Created-User (manager)
+
+
+
+ ***ALERTS ROUTES***
+
+view alerts → All

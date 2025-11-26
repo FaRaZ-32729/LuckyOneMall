@@ -4,15 +4,15 @@
 const char* ssid = "Ammad Mallick";
 const char* password = "ammad.mallick";
 
-const char* websocket_server = "192.168.43.58";
+const char* websocket_server = "192.168.43.58";  
 const int websocket_port = 5000;
 const char* websocket_path = "/ws/alerts";
 
 WebSocketsClient webSocket;
 
-const char* device_id = "device-001";
+const char* device_id = "device-002";
 
-void webSocketEvent(WStype_t type, uint8_t* payload, size_t length) {
+void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
   switch (type) {
     case WStype_DISCONNECTED:
       Serial.println("[WSc] Disconnected!");
@@ -51,28 +51,28 @@ void setup() {
 void loop() {
   webSocket.loop();
 
-  static unsigned long lastPing = 0;
+    static unsigned long lastPing = 0;
   if (millis() - lastPing > 5000) {  // every 5 seconds
     webSocket.sendTXT("{\"type\":\"heartbeat\"}");
     lastPing = millis();
   }
 
   static unsigned long lastSend = 0;
-  if (millis() - lastSend > 10000) {
+  if (millis() - lastSend > 10000) { 
     lastSend = millis();
 
     // Simulated sensor values
-    float temperature = random(150, 450) / 10.0;  // 15°C to 45°C
-    float humidity = random(300, 900) / 10.0;     // 30% to 90%
+    float temperature = random(150, 450) / 10.0; // 15°C to 45°C
+    float humidity    = random(300, 900) / 10.0; // 30% to 90%
 
     bool temperatureHigh = temperature > 30;  // TEMP ALERT rule
-    bool humidityHigh = humidity < 40;        // HUMID ALERT rule
-    bool odourDetected = random(0, 10) > 7;   // 30% chance odour detected
+    bool humidityHigh = humidity < 40;       // HUMID ALERT rule
+    bool odourDetected = random(0, 10) > 7;  // 30% chance odour detected
 
     // Convert alerts to required strings
     String temperatureAlert = temperatureHigh ? "HIGH" : "NORMAL";
-    String humidityAlert = humidityHigh ? "HIGH" : "NORMAL";
-    String odourAlert = odourDetected ? "DETECTED" : "NORMAL";
+    String humidityAlert    = humidityHigh ? "HIGH" : "NORMAL";
+    String odourAlert       = odourDetected ? "DETECTED" : "NORMAL";
 
     // Build JSON packet
     String jsonData = "{";
