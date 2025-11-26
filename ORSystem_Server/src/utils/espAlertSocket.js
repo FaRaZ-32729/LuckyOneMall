@@ -10,19 +10,14 @@ const espAlertSocket = (server) => {
         console.log(`esp32 connected from ${serverIp}`);
 
 
-
         ws.on("message", async (message) => {
             console.log(message.toString());
 
-
-
             try {
                 // const data = JSON.parse(message);
-                // console.log("parsed json data", data);
+                // console.log("parsed json data => ", data);
 
                 let data;
-
-
 
                 try {
                     data = JSON.parse(message);
@@ -31,7 +26,7 @@ const espAlertSocket = (server) => {
                     console.log("non-JSON message:", message.toString());
                     return;
                 }
-
+                // new checks last heartbeat
                 if (data.type === "heartbeat") {
                     ws.lastBeat = Date.now();
                     return;
@@ -56,6 +51,7 @@ const espAlertSocket = (server) => {
 
         });
 
+        // new if heart beat not found after 10s it shows connection lost in console
         setInterval(() => {
             wSocket.clients.forEach((ws) => {
                 if (!ws.lastBeat) ws.lastBeat = Date.now();

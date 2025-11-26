@@ -12,8 +12,8 @@ const orgRouter = require("./src/routes/organizationRouter");
 const authRouter = require("./src/routes/authRouter");
 const venueRouter = require("./src/routes/venueRouter");
 const deviceRouter = require("./src/routes/deviceRouter");
-const authenticate = require("./src/middlewere/authMiddleware");
 const alertsRouter = require("./src/routes/alertsRouter");
+const authenticate = require("./src/middlewere/authMiddleware");
 
 
 // Utilities
